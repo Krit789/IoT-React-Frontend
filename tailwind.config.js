@@ -18,7 +18,7 @@ module.exports = {
       },
     },
     extend: {
-    fontFamily: {
+      fontFamily: {
         'sans': ['"IBM Plex Sans Thai Looped"', ...defaultTheme.fontFamily.sans],
         },
       colors: {
