@@ -38,6 +38,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Toaster, toast } from "react-hot-toast";
+import { ThemeProvider, useTheme } from "@/components/theme-provider";
 
 interface IUser {
   sid: number;
@@ -210,7 +211,7 @@ function App() {
   }, []);
 
   return (
-    <>
+    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <Toaster />
       <CreateUserDialog
         createUser={createUser}
@@ -229,7 +230,7 @@ function App() {
         <div className="md:h-[55vh] h-[38vh] overflow-auto rounded-md border border-1 shadow-md">
           <Table className="relative">
             {isLoading === 1 && <TableCaption>{tableCaption}</TableCaption>}
-            <TableHeader className="sticky top-0 bg-white shadow-sm">
+            <TableHeader className="sticky top-0 bg-white shadow-sm dark:bg-zinc-900/80 backdrop-blur-sm">
               <TableRow>
                 {tableHead.map((item) => (
                   <TableHead
@@ -265,7 +266,7 @@ function App() {
           />
         )}
       </main>
-    </>
+    </ThemeProvider>
   );
 }
 
@@ -396,7 +397,7 @@ function CreateUserDialog({
               type="datetime-local"
               id="DoB"
               className="w-full"
-              value={new Date(childState.dob).toJSON().split("Z")[0]}
+              defaultValue={childState.dob.substring(0,19)}
               onChange={(e) => {
                 handleChange(e, "dob");
               }}
@@ -442,7 +443,7 @@ function UserTableRow({
       <TableCell>{new Date(user.dob).toLocaleDateString()}</TableCell>
       <TableCell>
         <div
-          className="flex flex-row w-24 flex-nowrap items-center justify-center hover:bg-slate-200 cursor-pointer bg-slate-100 py-1 rounded-md gap-1 transition-colors duration-150 select-none"
+          className="flex flex-row w-24 flex-nowrap items-center justify-center hover:bg-slate-200 cursor-pointer bg-slate-100 dark:bg-zinc-900 dark:hover:bg-zinc-800 py-1 rounded-md gap-1 transition-colors duration-150 select-none"
           role="button"
           onClick={() => setCurrentUserInfo(user)}
         >
@@ -646,7 +647,7 @@ function UserInfoEditorBox({
                 id="DoB"
                 className="sm:w-50 w-full"
                 disabled={!editMode}
-                value={new Date(childState.dob).toJSON().split("Z")[0]}
+                defaultValue={childState.dob.substring(0,19)}
                 onChange={(e) => {
                   handleChange(e, "dob");
                 }}
@@ -730,8 +731,42 @@ function ButtonStatusDiv({
   fetchUser: Function;
   setCreateDialogState: Function;
 }) {
+  const themePref  = () => {
+    const localThemeSettings = localStorage.getItem('vite-ui-theme')
+    if (localThemeSettings && ['system', 'light', 'dark'].includes(localThemeSettings))
+      return localThemeSettings
+    return 'system'
+  };
+  const [appTheme, setAppTheme] = useState<string>(themePref())
+  const { setTheme } = useTheme()
+  useEffect(() => {
+    setTheme(appTheme as "light" | "dark" | "system")
+  }, [appTheme])
+  const toggleTheme = () => {
+    switch (appTheme){
+      case "light":
+        setAppTheme('dark')
+        break;
+      case "dark":
+        setAppTheme('system')
+        break;
+      case "system":
+        setAppTheme('light')
+        break;
+    }
+  }
   return (
     <div className="flex flex-row gap-x-2">
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => toggleTheme()}
+      >
+        <span className="material-icons mr-2" style={{ fontSize: "18px" }}>
+          {appTheme === 'light' ? "light_mode" : appTheme === 'dark' ? "dark_mode" : appTheme === 'system' ? "auto_awesome" : "auto_awesome"}
+        </span>
+        Toggle theme
+      </Button>
       <Button
         size="sm"
         variant="outline"
@@ -746,7 +781,7 @@ function ButtonStatusDiv({
       <Button
         size="sm"
         variant="outline"
-        disabled={isLoading === 1}
+        disabled={isLoading === 1 || isLoading === 2}
         onClick={() => fetchUser()}
       >
         <span
